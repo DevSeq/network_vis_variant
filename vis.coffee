@@ -25,6 +25,9 @@ Network = () ->
   # the group by artist layout.
   groupCenters = null
 
+  groupBy = (d) ->
+    d.artist
+
   # our force directed layout
   force = d3.layout.force()
   # color function used to color nodes
@@ -176,13 +179,13 @@ Network = () ->
     nodesMap
 
   # Helper function that returns an associative array
-  # with counts of unique attr in nodes
+  # with counts of unique values 
   # attr is value stored in node, like 'artist'
-  nodeCounts = (nodes, attr) ->
+  nodeCounts = (nodes, attrAccessor) ->
     counts = {}
     nodes.forEach (d) ->
-      counts[d[attr]] ?= 0
-      counts[d[attr]] += 1
+      counts[attrAccessor(d)] ?= 0
+      counts[attrAccessor(d)] += 1
     counts
 
   # Given two nodes a and b, returns true if
@@ -215,13 +218,13 @@ Network = () ->
     if sort == "links"
       counts = {}
       links.forEach (l) ->
-        counts[l.source.artist] ?= 0
-        counts[l.source.artist] += 1
-        counts[l.target.artist] ?= 0
-        counts[l.target.artist] += 1
+        counts[groupBy(l.source)] ?= 0
+        counts[groupBy(l.source)] += 1
+        counts[groupBy(l.target)] ?= 0
+        counts[groupBy(l.target)] += 1
       # add any missing artists that dont have any links
       nodes.forEach (n) ->
-        counts[n.artist] ?= 0
+        counts[groupBy(n)] ?= 0
 
       # sort based on counts
       artists = d3.entries(counts).sort (a,b) ->
@@ -230,17 +233,17 @@ Network = () ->
       artists = artists.map (v) -> v.key
     else
       # sort artists by song count
-      counts = nodeCounts(nodes, "artist")
+      counts = nodeCounts(nodes, groupBy)
       artists = d3.entries(counts).sort (a,b) ->
         b.value - a.value
       artists = artists.map (v) -> v.key
 
     artists
 
-  updateCenters = (artists) ->
+  updateCenters = (values) ->
     if layout == "radial"
       groupCenters = RadialPlacement().center({"x":width/2, "y":height / 2 - 100})
-        .radius(300).increment(18).keys(artists)
+        .radius(300).increment(18).keys(values)
 
   # Removes links from allLinks whose
   # source or target is not present in curNodes
@@ -333,7 +336,7 @@ Network = () ->
   moveToRadialLayout = (alpha) ->
     k = alpha * 0.1
     (d) ->
-      centerNode = groupCenters(d.artist)
+      centerNode = groupCenters(groupBy(d))
       d.x += (centerNode.x - d.x) * k
       d.y += (centerNode.y - d.y) * k
 
