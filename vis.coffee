@@ -26,7 +26,7 @@ Network = () ->
   groupCenters = null
 
   groupBy = (d) ->
-    d.artist
+    d.year
 
   # our force directed layout
   force = d3.layout.force()
