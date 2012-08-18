@@ -141,6 +141,14 @@ Network = () ->
     node.remove()
     update()
 
+  network.setGrouping = (newGrouping) ->
+    console.log(newGrouping)
+    if newGrouping == "year"
+      groupBy = (d) -> d.year
+    else
+      groupBy = (d) -> d.artist
+    update()
+
   # called once to clean up raw data and switch links to
   # point to node instances
   # Returns modified data
@@ -389,3 +397,15 @@ Network = () ->
 
   # Final act of Network() function is to return the inner 'network()' function.
   return network
+
+
+$ ->
+  myNetwork = Network()
+
+  # ....
+
+  d3.selectAll("#groupings a").on "click", (d) ->
+    newGrouping = d3.select(this).attr("id")
+    activate("groupings", newGrouping)
+    myNetwork.setGrouping(newGrouping)
+  
